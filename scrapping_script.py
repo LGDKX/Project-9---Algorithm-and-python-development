@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 
 # Website URL
-url = "https://www.instant-gaming.com/fr/12738-acheter-hogwarts-legacy-l-heritage-de-poudlard-deluxe-edition-deluxe-edition-pc-jeu-steam-europe/" #pylint: disable=all
+url = "https://www.instant-gaming.com/fr/jeux/steam/" #pylint: disable=all
 
 # User-Agent header to simulate a web browser
 headers = {
