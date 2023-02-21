@@ -1,30 +1,32 @@
-'''Exercice proposé pour nettoyer des données'''
+'''Exercice about cleaning data'''
 
-# Import des librairies dont nous aurons besoin
+###################################################
+# Import pandas package in order to use csv files #
+###################################################
 import pandas as pd
-import numpy as np
 
-# On "importe" le jeu de donnée
+# Importing data set
 data = pd.read_csv('operations.csv')
 
-# On corrige le problème de la date
+# Correcting date problem
 data['date_operation'] = pd.to_datetime(data['date_operation'])
 
-# On créee un nouveau dataframe et on y stocke le dataframe des valeurs manquantes
+# Creating new dataframe in order to stock missing values's dataframe
 data_na = data.loc[data['montant'].isnull(),:]
 
-# Pour chaque ligne du dataframe on récupère les index
+# We get the index for every dataframe's lines
 for index in data_na.index:
-    # On calcule le montant à partir des soldes précédentes et actuelles
+    # Amount is calculated from the previous and current balances
     data.loc[index, 'montant'] = data.loc[index+1, 'solde_avt_ope'] - data.loc[index, 'solde_avt_ope'] #
 
-# On ajoute la catégorie manquante obtenue par déduction logique
+# Adding missing categorie by deduction
 data.loc[data['categ'].isnull(), 'categ'] = 'FACTURE TELEPHONE'
 
-# On supprime la donnée en double
+# Deleting double data
 data.drop_duplicates(subset=['date_operation', 'libelle', 'montant', 'solde_avt_ope'], inplace=True, ignore_index=True) #pylint: disable=all
 
-# On remplace la valeur incohérente
+# Replacing inconsistent value
 data.loc[data['montant']==-15000, 'montant'] = -14.39
 
+# Printing data
 print(data)
