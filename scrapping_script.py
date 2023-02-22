@@ -11,32 +11,28 @@ from bs4 import BeautifulSoup
 #########################################################
 import requests
 
-###########################################################
-# Import csv package in order to send data into csv files #
-###########################################################
-# import csv
-
-#########################################################
-# Import re package in order to use regular expressions #
-#########################################################
-# import re
-
-# List of excluded words
-exclude_list = ['PC', 'Playstation', 'Xbox', 'Nintendo']
+##################################################################
+# Import pandas package in order to manipulate data in csv files #
+##################################################################
+import pandas as pd
 
 # User-Agent header to simulate a web browser
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
     (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
-
-
-
-
     
 def fetch_data():
+    # Create empty lists to store the scraped data
+    links = []
+    titles = []
+    prices = []
+
+    # List of excluded words
+    exclude_list = ['PC', 'Playstation', 'Xbox', 'Nintendo']
+    
     # Loop through pages 1 to 134
-    for page in range(1, 2):
+    for page in range(1, 135):
         # Base URL that will change at every turn of the loop
         url = f"https://www.instant-gaming.com/fr/rechercher/?type%5B0%5D=steam&page={page}" #pylint: disable=all    
         
@@ -45,35 +41,33 @@ def fetch_data():
         doc = BeautifulSoup(result.text, "html.parser")
 
         # Fetch the games pages's link
-        links = doc.find_all("a", class_="cover")
+        links += [link.get("href") for link in doc.find_all("a", class_="cover")]
 
         # Fetch the games's title
-        titles = doc.find_all("span", class_="title")
+        titles += [title.text for title in doc.find_all("span", class_="title") if not any(word in title.text.split() for word in exclude_list)]
+
 
         #Fetch the games's price
-        prices = doc.find_all("div", class_="price")     
-            
-def print_data(links, titles, prices):
-    # Print the links
-    for link in links:
-        print(link.get("href"))
+        prices += [float(price.text.replace(',', '.').split('€')[0]) for price in doc.find_all("div", class_="price")[1:]]
 
-    #Print the titles
-    for title in titles:
-        # Exclude the parasitic titles
-        if not any(word in title.text for word in exclude_list):
-            print(title.text)
+        print(f"Page {page}: titles={len(titles)}, prices={len(prices)}, links={len(links)}")
 
-    # Print the prices with 20% added
-    for price in prices[1:]:
-        # Convert the price to a float value
-        price_value = float(price.text.replace(',', '.').split('€')[0])
-        # Add 20% to the price and format the result as a string with two decimal places
-        tva_price = '{:.2f} €'.format(price_value * 1.2)
-        print(tva_price)
+    # Add 20% to the prices
+    prices = [round(price * 1.2, 2) for price in prices]
+
+    return titles, prices, links
+           
+def save_to_csv(titles, prices, links):
+    # Create a pandas DataFrame from the scraped data
+    data = {'Title': titles, 'Price': prices, 'Link': links}
+    df = pd.DataFrame(data)
+    
+    # Save the DataFrame to a CSV file
+    df.to_csv('game_prices.csv', index=False)
+    print('Data saved to game_prices.csv')
 
 def execute():
-    fetch_data
-    print_data
+    titles, prices, links, = fetch_data()
+    save_to_csv(titles, prices, links,)
 
-execute
+execute()
