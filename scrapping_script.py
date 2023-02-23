@@ -28,32 +28,44 @@ def fetch_data():
     titles = []
     prices = []
 
-    # List of excluded words
-    exclude_list = ['PC', 'Playstation', 'Xbox', 'Nintendo']
+    # Number of titles we want to skip at the beginning
+    skip = 4
     
     # Loop through pages 1 to 134
-    for page in range(1, 135):
+    for page in range(1, 2):
         # Base URL that will change at every turn of the loop
         url = f"https://www.instant-gaming.com/fr/rechercher/?type%5B0%5D=steam&page={page}" #pylint: disable=all    
         
         # Fetch the page
         result = requests.get(url, headers=headers)
         doc = BeautifulSoup(result.text, "html.parser")
-
+        
         # Fetch the games pages's link
         links += [link.get("href") for link in doc.find_all("a", class_="cover")]
 
-        # Fetch the games's title
-        titles += [title.text for title in doc.find_all("span", class_="title") if not any(word in title.text.split() for word in exclude_list)]
-
+        page_titles = [title.text for title in doc.find_all("span", class_="title")]
+        titles += page_titles[skip:]
 
         #Fetch the games's price
-        prices += [float(price.text.replace(',', '.').split('€')[0]) for price in doc.find_all("div", class_="price")[1:]]
+        information_divs = doc.find_all("div", class_="information")[1:]
+        for div in information_divs:
+            price_div = div.find("div", class_="price")
+            if price_div:
+                price = float(price_div.text.replace(',', '.').split('€')[0])
+            else:
+                price = "No price"
+            if price == "No price":
+                print(div)
+            prices.append(price)
 
-        print(f"Page {page}: titles={len(titles)}, prices={len(prices)}, links={len(links)}")
+        #Fetch the games's price
+        # prices += [float(price.text.replace(',', '.').split('€')[0]) for price in doc.find_all("div", class_="price")[1:]]
 
-    # Add 20% to the prices
-    prices = [round(price * 1.2, 2) for price in prices]
+        # print(f"Page {page}: titles={len(titles)}, prices={len(prices)}, links={len(links)}")
+
+    # # Add 20% to the prices
+    # if price != "No price"
+    #     prices = [round(price * 1.2, 2) for price in prices]
 
     return titles, prices, links
            
