@@ -57,23 +57,24 @@ class InstantGamingScraper:
             page_titles = [title.text for title in doc.find_all("span", class_="title")]
             titles += page_titles[skip:]
 
-            #Fetch the games's price
+            #Fetch the games's price and check if there is price. If not, it says so.
             information_divs = doc.find_all("div", class_="information")
             for i, div in enumerate(information_divs):
                 if i == len(information_divs) - 1:
                     continue
-                # information_div = div.find("div", class_="information")
                 price_div = div.find("div", class_="price")
                 if price_div:
                     price = float(price_div.text.replace(',', '.').split('€')[0])
+                    # Add 20 % for the TVA
                     final_price = round(price * 1.2, 2)
                 else:
-                    price = "No price"
-                    final_price = "No price"
+                    price = "Pas de prix"
+                    final_price = "Pas de prix"
+                # Add the prices to the csv file
                 prices.append(price)
                 final_prices.append(final_price)
 
-        return titles, prices, final_prices,     links
+        return titles, prices, final_prices, links
 
     def save_to_csv(self, titles, prices, final_prices, links):
         """This function send the data to a csv file
@@ -96,14 +97,14 @@ class DataSearcher:
     """Class to search for specific games in the list
     """
 
-    def __init__(self, query):
-        self.query = query
+    def __init__(self, research):
+        self.research = research
 
     def fetch_csv(self):
         """This function fetches the data from a CSV file using pandas
         """
         # Read the CSV file into a pandas dataframe
-        df = pd.read_csv('games.csv')
+        df = pd.read_csv('game_prices.csv') # pylint: disable=C0103
 
         # Extract the data into separate lists
         titles = df['Title'].tolist()
@@ -113,12 +114,9 @@ class DataSearcher:
 
         return titles, prices, final_prices, links
 
-    def search(self, query):
+    def search(self, research):
         """This function search for a game by name
         """
-
-        # # Ask the user for a game name
-        # query = input("Entrez le nom du jeu à chercher : ")
 
         # Fetch the data
         titles, prices, final_prices, links = self.fetch_csv()
@@ -126,7 +124,7 @@ class DataSearcher:
         # Create a list of matching games
         matching_games = []
         for i, title in enumerate(titles):
-            if query.lower() in title.lower():
+            if research.lower() in title.lower():
                 matching_games.append((title, prices[i], final_prices[i], links[i]))
 
         # Display the matching games
@@ -134,22 +132,22 @@ class DataSearcher:
             print("Aucun jeu correspondant trouvé.")
         else:
             print(f"Voici les {len(matching_games)} jeux correspondants :")
-            for game in matching_games:
-                print(f"Titre : {game[0]}")
-                print(f"Prix : {game[1]}€")
-                print(f"Prix final : {game[2]}€")
-                print(f"Lien : {game[3]}")
+            for game_match in matching_games:
+                print(f"Titre : {game_match[0]}")
+                print(f"Prix : {game_match[1]}€")
+                print(f"Prix final : {game_match[2]}€")
+                print(f"Lien : {game_match[3]}")
                 print()
 
-    def execute_search(self):
-        """This function execute the search function"""
-        self.search(query=input("Entrez le nom du jeu à chercher : "))
-
+# Ask whether if you want to search for a game or to scrap the website
 choice = input('Veux-tu rechercher une entrée existante (Taper "Rechercher") \
 ou récuperer les données sur le site (Taper "Recuperer") ? ')
 if choice.lower() == "rechercher":
+    # Ask the game title
     query = input("Entrez le nom du jeu à chercher : ")
+    # Create an instance of the DataSearcher class
     game = DataSearcher(query)
+    # Call the search function on the instance to start the search process
     game.search(query)
 elif choice.lower() == "recuperer":
     # Create an instance of the InstantGamingScraper class
