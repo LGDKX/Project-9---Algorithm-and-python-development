@@ -1,6 +1,8 @@
 """Scrapping script to get all the prices on Instant Gaming with TVA added
 """
 
+# The "\" are only here in order to respect pylint rules
+
 ###########################################################################
 # Import the InstantGamingScraper class to scrap data from Instant Gaming #
 ###########################################################################
@@ -28,4 +30,5 @@ elif choice.lower() == "recuperer":
     # Call the execute() method on the instance to start the scraping process
     scraper.execute_scrap()
 else:
+    # Error Message
     print('Choix invalide, merci de taper "Rechercher" ou "Recuperer"')
