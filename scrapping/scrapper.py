@@ -32,6 +32,7 @@ class InstantGamingScraper:
     def fetch_data(self):
         """This function fetch data
         """
+        
         # Create empty lists to store the scraped data
         links = []
         titles = []
@@ -50,11 +51,12 @@ class InstantGamingScraper:
             result = requests.get(url, headers=self.headers, timeout=60)
             doc = BeautifulSoup(result.text, "html.parser")
 
-            # Fetch the games pages's link
+            # Fetch the games pages's link and add it to the CSV file
             links += [link.get("href") for link in doc.find_all("a", class_="cover")]
 
-            #Fetch the games's title
+            # Fetch the games's title
             page_titles = [title.text for title in doc.find_all("span", class_="title")]
+            # Add the titles in the CSV file skipping the 4 first ones 
             titles += page_titles[skip:]
 
             #Fetch the games's price and check if there is price. If not, it says so.
@@ -79,6 +81,7 @@ class InstantGamingScraper:
     def save_to_csv(self, titles, prices, final_prices, links):
         """This function send the data to a csv file
         """
+        
         # Create a pandas DataFrame from the scraped data
         data = {'Title': titles, 'Price': prices, 'Final Price': final_prices, 'Link': links}
         df = pd.DataFrame(data)
@@ -90,6 +93,7 @@ class InstantGamingScraper:
     def execute_scrap(self):
         """This function execute the scrap function
         """
+        
         titles, prices, final_prices, links, = self.fetch_data()
         self.save_to_csv(titles, prices, final_prices, links,)
 
